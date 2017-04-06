@@ -1,0 +1,73 @@
+---
+title: "US Census"
+author: "John Premkumar"
+date: "April 4, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+library(shiny)
+library(maps)
+library(mapproj)
+counties <- readRDS("data/counties.rds")
+source("helpers.R")
+
+shinyServer(
+  function(input, output) {
+    output$map <- renderPlot({
+      args <- switch(input$var,
+                     "Percent White" = list(counties$white, "darkgreen", "% White"),
+                     "Percent Black" = list(counties$black, "black", "% Black"),
+                     "Percent Hispanic" = list(counties$hispanic, "darkorange", "% Hispanic"),
+                     "Percent Asian" = list(counties$asian, "darkviolet", "% Asian"))
+      
+      args$min <- input$range[1]
+      args$max <- input$range[2]
+      
+      do.call(percent_map, args)
+    })
+  }
+)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+
+shinyUI(fluidPage(
+  titlePanel("censusVis"),
+  
+  sidebarLayout(
+    sidebarPanel(
+      helpText("Create demographic maps with 
+               information from the 2010 US Census."),
+      
+      selectInput("var", 
+                  label = "Choose a variable to display",
+                  choices = c("Percent White", "Percent Black",
+                              "Percent Hispanic", "Percent Asian"),
+                  selected = "Percent White"),
+      
+      sliderInput("range", 
+                  label = "Range of interest:",
+                  min = 0, max = 100, value = c(0, 100))
+      ),
+    
+    mainPanel(plotOutput("map"))
+  )
+))
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
